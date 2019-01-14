@@ -110,6 +110,12 @@
             <a class="btn btn-primary btn-sm" href="{{ route('payment.alipay', ['order' => $order->id]) }}">支付宝支付</a>
             <!-- 把之前的微信支付按钮换成这个 -->
             <button class="btn btn-sm btn-success" id='btn-wechat'>微信支付</button>
+            <!-- 分期支付按钮开始 -->
+            <!-- 仅当订单总金额大等于分期最低金额时才展示分期按钮 -->
+            @if($order->total_amount >= config('app.min_installment_amount'))
+            <button class="btn btn-sm btn-danger" id="btn-installment">分期付款</button>
+            @endif
+            <!-- 分期支付按钮结束 -->
           </div>
         @endif
         <!-- 支付按钮结束 -->
@@ -131,6 +137,45 @@
 </div>
 </div>
 </div>
+<!-- 分期弹窗开始 -->
+<div class="modal fade" id="installment-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">选择分期期数</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered table-striped text-center">
+          <thead>
+          <tr>
+            <th class="text-center">期数</th>
+            <th class="text-center">费率</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+          @foreach(config('app.installment_fee_rate') as $count => $rate)
+            <tr>
+              <td>{{ $count }}期</td>
+              <td>{{ $rate }}%</td>
+              <td>
+                <button class="btn btn-sm btn-primary btn-select-installment" data-count="{{ $count }}">选择</button>
+              </td>
+            </tr>
+          @endforeach
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- 分期弹窗结束 -->
 @endsection
 
 @section('scriptsAfterJs')
@@ -195,6 +240,17 @@
         });
       });
 
+      $('#btn-installment').click(function () {
+        $('#installment-modal').modal();
+      });
+
+      $('.btn-select-installment').click(function () {
+        axios.post('{{ route('payment.installment', ['order' => $order->id]) }}', { count: $(this).data('count') })
+            .then(function (response) {
+                console.log(response.data);
+                // todo 跳转到分期付款界面
+            });
+      });
     });
   </script>
 @endsection
