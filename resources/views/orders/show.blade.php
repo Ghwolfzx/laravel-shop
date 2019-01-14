@@ -249,6 +249,7 @@
             .then(function (response) {
                 console.log(response.data);
                 // todo 跳转到分期付款界面
+                location.href = '/installments/' + response.data.id;
             });
       });
     });
