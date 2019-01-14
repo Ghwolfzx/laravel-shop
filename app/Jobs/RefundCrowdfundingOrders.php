@@ -27,16 +27,17 @@ class RefundCrowdfundingOrders implements ShouldQueue
         // 如果众筹状态不是失败则不执行退款
         if ($this->crowdfunding->status !== CrowdfundingProduct::STATUS_FAIL) {
             return;
-        } 
+        }
 
         $orderService = app(OrderService::class);
         // 查询所有参与此众筹的订单
         Order::query()
             ->where('type', Order::TYPE_CROWDFUNDING)
+            ->where('refund_status', Order::REFUND_STATUS_PENDING)
             ->whereNotNull('paid_at')
-            ->whereHas('items', function ($query) use ($crowdfunding) {
+            ->whereHas('items', function ($query) {
                 // 包含当前商品
-                $query->where('product_id', $crowdfunding->product_id);
+                $query->where('product_id', $this->crowdfunding->product_id);
             })
             ->get()
             ->each(function (Order $order) use ($orderService) {

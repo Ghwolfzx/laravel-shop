@@ -134,8 +134,9 @@ class OrderService
         return $order;
     }
 
-    protected function refundOrder(Order $order)
+    public function refundOrder(Order $order)
     {
+        \Log::info('order ', $order->toArray());
         // 判断该订单的支付方式
         switch ($order->payment_method) {
             case 'wechat':
