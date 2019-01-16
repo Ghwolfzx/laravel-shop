@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\SearchBuilders\ProductSearchBuilder;
+use App\Services\ProductService;
 
 class ProductsController extends Controller
 {
@@ -69,8 +70,7 @@ class ProductsController extends Controller
         $productIds = collect($result['hits']['hits'])->pluck('_id')->all();
         // 通过 whereIn 方法从数据库中读取商品数据
         $products = Product::query()
-            ->whereIn('id', $productIds)
-            ->orderByRaw(sprintf('FIND_IN_SET(id, "%s")', join(',', $productIds)))
+            ->byIds($productIds)
             ->get();
 
         $pager = new LengthAwarePaginator($products, $result['hits']['total'], $perPage, $page, [
@@ -106,7 +106,7 @@ class ProductsController extends Controller
         ]);
     }
 
-    public function show(Product $product, Request $request)
+    public function show(Product $product, Request $request, ProductService $service)
     {
         // 判断商品是否已经上架，如果没有上架则抛出异常。
         if (!$product->on_sale) {
@@ -115,7 +115,7 @@ class ProductsController extends Controller
 
         $favored = false;
         // 用户未登录时返回的是 null，已登录时返回的是对应的用户对象
-        if($user = $request->user()) {
+        if ($user = $request->user()) {
             // 从当前用户已收藏的商品中搜索 id 为当前商品 id 的商品
             // boolval() 函数用于把值转为布尔值
             $favored = boolval($user->favoriteProducts()->find($product->id));
@@ -129,10 +129,17 @@ class ProductsController extends Controller
             ->limit(10) // 取出 10 条
             ->get();
 
+        $similarProductIds = $service->getSimilarProductIds($product, 4);
+        // 根据 Elasticsearch 搜索出来的商品 ID 从数据库中读取商品数据
+        $similarProducts = Product::query()
+            ->byIds($similarProductIds)
+            ->get();
+
         return view('products.show', [
             'product' => $product,
             'favored' => $favored,
-            'reviews' => $reviews
+            'reviews' => $reviews,
+            'similar' => $similarProducts,
         ]);
     }
 
