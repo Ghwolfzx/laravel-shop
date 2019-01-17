@@ -39,6 +39,12 @@ class CloseOrder implements ShouldQueue
             // 循环遍历订单中的商品 SKU，将订单中的数量加回到 SKU 的库存中去
             foreach ($this->order->items as $item) {
                 $item->productSku->addStock($item->amount);
+                // 当前订单类型为秒杀订单，并对应商品是上架且未到截止时间
+                if ($item->order->type === Order::TYPE_SECKILL
+                    && $item->product->on_sale
+                    && !$item->product->seckill->is_after_end) {
+                    \Redis::incr('seckill_sku_' . $item->productSku->id);
+                }
             }
             if ($this->order->couponCode) {
                 $this->order->couponCode->changeUsed(false);
