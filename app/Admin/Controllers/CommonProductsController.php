@@ -9,7 +9,7 @@ use Encore\Admin\Layout\Content;
 use App\Models\Category;
 use Encore\Admin\Grid;
 use Encore\Admin\Form;
-use App\Jobs\SyncOneProductToEs;
+use App\Jobs\SyncOneProductToES;
 
 abstract class CommonProductsController extends Controller
 {
