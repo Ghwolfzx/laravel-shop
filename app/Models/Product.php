@@ -47,7 +47,7 @@ class Product extends Model
 
     public function seckill()
     {
-        return $this->hasOne(SeckillPorduct::class);
+        return $this->hasOne(SeckillProduct::class);
     }
 
     public function getImageUrlAttribute()
