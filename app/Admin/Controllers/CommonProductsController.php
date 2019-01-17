@@ -100,7 +100,7 @@ abstract class CommonProductsController extends Controller
         });
         $form->saved(function (Form $form) {
             $product = $form->model();
-            $this->dispatch(new SyncOneProductToEs($product));
+            $this->dispatch(new SyncOneProductToES($product));
         });
 
         return $form;
